@@ -17,6 +17,7 @@
     "koa-router": "^5.2.3",
     "koa-static": "^1.5.2",
     "koa-validate": "^0.2.11",
+    "simple-list-draggable": "0.0.3",
     "underscore": "^1.8.3"
   }
 }

@@ -45,5 +45,6 @@ app.use(auth())
     .use(api.routes())
     .use(api.allowedMethods())
     .use(staticServer('html'))
+    .use(staticServer('node_modules'))
 
 app.listen(8099)

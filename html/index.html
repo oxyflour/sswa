@@ -33,6 +33,10 @@
     .has-control:focus + .input-control {
         visibility: visible;
     }
+    #peers li,
+    #acls li {
+        padding: 2px 0;
+    }
 </style>
 <title>sswa - simple squid webadmin</title>
 </head>
@@ -100,7 +104,7 @@
             <div class="form-group">
                 <label class="col-xs-2 control-label">peers</label>
                 <div class="col-xs-10">
-                    <ul class="list-unstyled">
+                    <ul class="list-unstyled" id="peers">
                         <li v-for="peer in activeServer.peers" class="row"
                             v-bind:class="{ 'has-error':peer.hasError }">
                             <div class="col-xs-4">
@@ -124,7 +128,7 @@
             <div class="form-group">
                 <label class="col-xs-2 control-label">acls</label>
                 <div class="col-xs-10">
-                    <ul class="list-unstyled">
+                    <ul class="list-unstyled" id="acls">
                         <li v-for="acl in activeServer.acls" class="row">
                             <div class="col-xs-4">
                                 <select class="no-border"
@@ -138,6 +142,7 @@
                                     placeholder="{{ getAclFormat(acl.type) }}"
                                     v-model="acl.rule" />
                                 <span class="input-control no-border" tabindex="-1"
+                                    v-on:mousedown="enableDragable(activeServer.acls, $index)"
                                     v-on:click="askToMove(activeServer.acls, $index)">...</span>
                             </div>
                         </li>
@@ -153,9 +158,10 @@
 <script src="//cdn.bootcss.com/jquery/1.11.3/jquery.min.js"></script>
 <script src="//cdn.bootcss.com/jqueryui/1.11.4/jquery-ui.min.js"></script>
 <script src="//cdn.bootcss.com/bootstrap/3.3.5/js/bootstrap.min.js"></script>
-<script src="//bootstrap-notify.remabledesigns.com/js/bootstrap-notify.min.js"></script>
 <script src="//cdn.bootcss.com/vue/1.0.7/vue.js"></script>
 <script src="//cdn.bootcss.com/vue-resource/0.1.17/vue-resource.js"></script>
+<script src="bootstrap-notify/bootstrap-notify.min.js"></script>
+<script src="simple-list-draggable/jquery-simple-list-draggable.js"></script>
 <script>
 
 Array.prototype.swap = function(i, j) {
@@ -266,6 +272,14 @@ new Vue({
             else if (pos === +pos)
                 list.splice(Math.clamp(pos, 0, list.length - 1),
                     0, list.splice(index, 1)[0])
+        },
+        enableDragable(list, index) {
+            $('#acls').simpleDraggable(function(pos) {
+                if (pos >= 0 && pos < index)
+                    list.splice(pos, 0, list.splice(index, 1)[0])
+                else if (pos > index + 1)
+                    list.splice(pos - 1, 0, list.splice(index, 1)[0])
+            })
         }
     },
 
