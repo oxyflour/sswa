@@ -1,0 +1,3 @@
+#sswa
+
+simple squid webadmin

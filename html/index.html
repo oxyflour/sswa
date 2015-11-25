@@ -1,0 +1,286 @@
+<!doctype html>
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="//cdn.bootcss.com/bootstrap/3.3.5/css/bootstrap.min.css">
+<link rel="stylesheet" href="//cdn.bootcss.com/jqueryui/1.11.4/jquery-ui.min.css">
+<style>
+    .page-header.form-header {
+        margin-top: 15px;
+    }
+    .no-border {
+        border-color: transparent;
+    }
+    .full-width {
+        width: 100%;
+    }
+    .has-control {
+        padding-right: 30px;
+    }
+    .input-control {
+        visibility: hidden;
+        position: absolute;
+        width: 30px;
+        padding: 3px 0;
+        margin-right: 15px;
+        top: 0;
+        right: 0;
+        cursor: pointer;
+        background: none;
+        text-align: center;
+    }
+    .input-control:focus,
+    .has-control:focus + .input-control {
+        visibility: visible;
+    }
+</style>
+<title>sswa - simple squid webadmin</title>
+</head>
+<body id="app">
+<div class="container">
+<div class="row">
+    <div class="col-sm-2 hidden-xs">
+        <h4><small>Servers</small></h4>
+        <ul class="nav nav-pills nav-stacked">
+            <li v-for="(id, server) in serverList"
+                v-bind:class="{ active:server === activeServer }">
+                <a v-on:click="selectedId = id">
+                    {{ server.name }} ({{ server.port }})
+                </a>
+            </li>
+            <li v-bind:class="{ active:!activeServer.id }">
+                <a v-on:click="selectedId = ''">
+                    +new
+                </a>
+            </li>
+        </ul>
+    </div>
+    <div class="col-sm-10">
+        <form class="form-horizontal">
+            <div class="form-group page-header form-header">
+                <div class="col-xs-12">
+                    <div class="pull-right">
+                        <button type="button" class="btn btn-danger"
+                            v-show="activeServer.id"
+                            v-on:click="deleteServer()">Delete</button>
+                        <button type="button" class="btn btn-primary"
+                            v-on:click="activeServer.id ? updateServer() : createServer()">Save</button>
+                    </div>
+                    <h4>
+                        <span class="hidden-xs">
+                            Edit Server
+                        </span>
+                        <select v-model="selectedId" class="visible-xs-inline no-border">
+                            <option v-for="(id, server) in serverList" v-bind:value="id">
+                                server {{ server.name }} ({{ server.port }})
+                            </option>
+                            <option value="">new server</option>
+                        </select>
+                    </h4>
+                </div>
+            </div>
+            <div class="form-group">
+                <label class="col-xs-2 control-label">name</label>
+                <div class="col-xs-10">
+                    <input class="form-control" type="text"
+                        required="true"
+                        placeholder="required"
+                        v-model="activeServer.name" />
+                </div>
+            </div>
+            <div class="form-group">
+                <label class="col-xs-2 control-label">port</label>
+                <div class="col-xs-10">
+                    <input type="number" class="form-control"
+                        min="1024" max="65535"
+                        placeholder="1024 ~ 65535"
+                        v-model="activeServer.port" />
+                </div>
+            </div>
+            <div class="form-group">
+                <label class="col-xs-2 control-label">peers</label>
+                <div class="col-xs-10">
+                    <ul class="list-unstyled">
+                        <li v-for="peer in activeServer.peers" class="row"
+                            v-bind:class="{ 'has-error':peer.hasError }">
+                            <div class="col-xs-4">
+                                <input type="text" class="no-border full-width"
+                                    placeholder="name"
+                                    v-model="peer.name" />
+                            </div>
+                            <div class="col-xs-8">
+                                <input type="text" class="no-border full-width has-control"
+                                    placeholder="host:port"
+                                    v-model="peer.url" />
+                                <span class="input-control no-border" tabindex="-1"
+                                    v-on:click="confirmRemove(activeServer.peers, $index)">x</span>
+                            </div>
+                        </li>
+                    </ul>
+                    <button type="button" class="btn btn-sm"
+                        v-on:click="activeServer.peers.push({ })">Add</button>
+                </div>
+            </div>
+            <div class="form-group">
+                <label class="col-xs-2 control-label">acls</label>
+                <div class="col-xs-10">
+                    <ul class="list-unstyled">
+                        <li v-for="acl in activeServer.acls" class="row">
+                            <div class="col-xs-4">
+                                <select class="no-border"
+                                    v-model="acl.type">
+                                    <option>custom</option>
+                                    <option>domain</option>
+                                </select>
+                            </div>
+                            <div class="col-xs-8">
+                                <input type="text" class="no-border full-width has-control"
+                                    placeholder="{{ getAclFormat(acl.type) }}"
+                                    v-model="acl.rule" />
+                                <span class="input-control no-border" tabindex="-1"
+                                    v-on:click="askToMove(activeServer.acls, $index)">...</span>
+                            </div>
+                        </li>
+                    </ul>
+                    <button type="button" class="btn btn-sm"
+                        v-on:click="activeServer.acls.push({ })">Add</button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+</div>
+<script src="//cdn.bootcss.com/jquery/1.11.3/jquery.min.js"></script>
+<script src="//cdn.bootcss.com/jqueryui/1.11.4/jquery-ui.min.js"></script>
+<script src="//cdn.bootcss.com/bootstrap/3.3.5/js/bootstrap.min.js"></script>
+<script src="//bootstrap-notify.remabledesigns.com/js/bootstrap-notify.min.js"></script>
+<script src="//cdn.bootcss.com/vue/1.0.7/vue.js"></script>
+<script src="//cdn.bootcss.com/vue-resource/0.1.17/vue-resource.js"></script>
+<script>
+
+Array.prototype.swap = function(i, j) {
+    var x = this[i],
+        y = this[j]
+    this[i] = y
+    this[j] = x
+}
+
+Math.clamp = function(x, begin, end) {
+    if (x < begin)
+        x = begin
+    else if (x > end)
+        x = end
+    return x
+}
+
+;('danger|success|info|warning').split('|').forEach(type => {
+    $['notify' + type[0].toUpperCase() + type.substr(1)] = function(message, options) {
+        options = options || { }
+        options.type = type
+        return $.notify(message, options)
+    }
+})
+
+Vue.config.debug = true
+
+new Vue({
+    el: '#app',
+    data: {
+        serverList: { },
+        selectedId: 0,
+        activeServer: { },
+    },
+    watch: {
+        selectedId(id) {
+            if (!id || !this.serverList[id]) {
+                this.activeServer = { peers:[], acls:[] }
+            }
+            else this.api.get({ id:id }, function(data) {
+                Vue.set(this.serverList, id, data)
+                this.activeServer = data
+            }).error(function(data) {
+                $.notifyDanger('get server failed')
+            })
+        }
+    },
+    methods: {
+        validateServer() {
+            if (!this.activeServer)
+                return false
+
+            if (!this.activeServer.name)
+                return $.notifyDanger('server name is required') && false
+
+            var port = parseInt(this.activeServer.port)
+            if (!(port > 1024 && port < 65535))
+                return $.notifyDanger('port number should be between 1024 and 65535') && false
+
+            var bindedIds = Object.keys(this.serverList).map(parseFloat).filter(id =>
+                this.serverList[id].port === port && this.activeServer.id !== id)
+            if (bindedIds.length >= 1)
+                return $.notifyDanger('port has been used by another server') && false
+
+            return true
+        },
+        createServer() {
+            this.validateServer() && this.api.save(this.activeServer, function(id) {
+                Vue.set(this.activeServer, 'id', id)
+                Vue.set(this.serverList, id, this.activeServer)
+                this.selectedId = id
+                $.notifySuccess('server created')
+            }).error(function(data) {
+                $.notifyDanger('create server failed')
+            })
+        },
+        updateServer() {
+            this.validateServer() && this.api.update({ id:this.activeServer.id }, this.activeServer, function(id) {
+                $.notifySuccess('server updated')
+            }).error(function(data) {
+                $.notifyDanger('update server failed')
+            })
+        },
+        deleteServer() {
+            confirm('delete this server?') && this.api.delete({ id:this.activeServer.id }, function(id) {
+                Vue.delete(this.serverList, id)
+                this.selectedId = Object.keys(this.serverList)[0] || ''
+                $.notifySuccess('server deleted')
+            }).error(function(data) {
+                $.notifyDanger('delete server failed')
+            })
+        },
+
+        getAclFormat(type) {
+            return {
+                domain: 'peer domain...'
+            }[type] || 'acl'
+        },
+
+        confirmRemove(list, index) {
+            confirm('remove this item?') && list.splice(index, 1)
+        },
+        askToMove(list, index) {
+            var str = prompt('move to index ("x" to remove)'),
+                pos = parseInt(str)
+            if (str === 'x')
+                list.splice(index, 1)
+            else if (pos === +pos)
+                list.splice(Math.clamp(pos, 0, list.length - 1),
+                    0, list.splice(index, 1)[0])
+        }
+    },
+
+    api: null,
+    ready() {
+        this.$resource('server').get({ }, function(data) {
+            this.serverList = data
+            this.selectedId = Object.keys(this.serverList)[0] || ''
+        }).error(function(data) {
+            $.notifyDanger('fetch data failed, refresh the page later')
+        })
+
+        this.api = this.$resource('server/:id')
+    }
+})
+</script>
+</body>
+</html>
