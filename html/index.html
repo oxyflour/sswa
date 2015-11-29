@@ -153,7 +153,7 @@
                                     placeholder="{{ getAclFormat(acl.type) }}"
                                     v-model="acl.rule" />
                                 <span class="input-control no-border" tabindex="-1"
-                                    v-on:mousedown="enableDragable(activeServer.acls, $index)"
+                                    v-on:mousedown="enableDragable(activeServer.acls, $index, $event)"
                                     v-on:click="askToMove(activeServer.acls, $index)">...</span>
                             </div>
                         </li>
@@ -295,13 +295,13 @@ new Vue({
                 list.splice(Math.clamp(pos, 0, list.length - 1),
                     0, list.splice(index, 1)[0])
         },
-        enableDragable(list, index) {
+        enableDragable(list, index, evt) {
             $('#acls').simpleDraggable(function(pos) {
                 if (pos >= 0 && pos < index)
                     list.splice(pos, 0, list.splice(index, 1)[0])
                 else if (pos > index + 1)
                     list.splice(pos - 1, 0, list.splice(index, 1)[0])
-            })
+            }, evt)
         },
     },
 
