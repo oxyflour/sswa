@@ -15,6 +15,11 @@ api.get('/:id', function *(next) {
     this.body = JSON.stringify(data)
 })
 
+api.get('/:id/status', function *(next) {
+    var data = db.assertExistingData(this)
+    this.body = JSON.stringify(yield *daemon.status(data.id, data))
+})
+
 api.del('/:id', function *(next) {
     var data = db.assertExistingData(this)
     yield *daemon.stop(data.id, data)
@@ -24,14 +29,14 @@ api.del('/:id', function *(next) {
 api.put('/:id', function *(next) {
     var body = db.assertValidData(this),
         data = db.assertExistingData(this)
-    yield *daemon.start(data.id, body)
+    yield *daemon[body.started ? 'start' : 'stop'](data.id, body)
     this.body = db.update(data.id, body)
 })
 
 api.post('/', function *(next) {
     var body = db.assertValidData(this),
         id = db.newId()
-    yield *daemon.start(id, body)
+    yield *daemon[body.started ? 'start' : 'stop'](id, body)
     this.body = db.update(id, body)
 })
 

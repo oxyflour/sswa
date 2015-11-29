@@ -25,7 +25,7 @@ module.exports = function() {
         }
         else {
             this.set('WWW-Authenticate', 'Basic')
-            this.body = 'auth required'
+            this.body = 'check var/user.json for username and password'
             this.status = 401
         }
     }

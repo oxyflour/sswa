@@ -102,6 +102,17 @@
                 </div>
             </div>
             <div class="form-group">
+                <div class="col-xs-10 col-xs-offset-2">
+                    <div class="checkbox">
+                        <label>
+                            <input type="checkbox" v-model="activeServer.started">
+                            Started
+                            <span v-show="serverStatus">({{ serverStatus }})</span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+            <div class="form-group">
                 <label class="col-xs-2 control-label">peers</label>
                 <div class="col-xs-10">
                     <ul class="list-unstyled" id="peers">
@@ -195,6 +206,7 @@ new Vue({
         serverList: { },
         selectedId: 0,
         activeServer: { },
+        serverStatus: '',
     },
     watch: {
         selectedId(id) {
@@ -255,6 +267,16 @@ new Vue({
             })
         },
 
+        updateStatus(count) {
+            if (!this.activeServer || !this.activeServer.id)
+                return this.serverStatus = ''
+            this.$resource('server/:id/status').get({ id:this.activeServer.id }, function(data) {
+                this.serverStatus = data ? 'running' : 'stopped'
+            }).error(function(data) {
+                this.serverStatus = 'error'
+            })
+        },
+
         getAclFormat(type) {
             return {
                 domain: 'peer domain...'
@@ -280,7 +302,7 @@ new Vue({
                 else if (pos > index + 1)
                     list.splice(pos - 1, 0, list.splice(index, 1)[0])
             })
-        }
+        },
     },
 
     api: null,
@@ -293,6 +315,8 @@ new Vue({
         })
 
         this.api = this.$resource('server/:id')
+
+        setInterval(() => this.updateStatus(), 2000)
     }
 })
 </script>
