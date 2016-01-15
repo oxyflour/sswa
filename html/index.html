@@ -110,7 +110,7 @@
                             v-bind:class="{ 'has-error':peer.hasError }">
                             <div class="col-xs-4 no-wrap">
                                 <span class="glyphicon glyphicon-option-vertical cursor-pointer"
-                                    title="drag to resort\ndouble click to remove"
+                                    title="drag to resort&#13;double click to remove"
                                     v-on:mousedown="enableDragable(activeServer.peers, $index, $event)"
                                     v-on:dblclick="activeServer.peers.splice($index, 1)"></span>
                                 <input type="text" class="no-border"
@@ -125,7 +125,7 @@
                         </li>
                     </ul>
                     <button type="button" class="btn btn-sm"
-                        v-on:click="activeServer.peers.push({ })">Add</button>
+                        v-on:click="activeServer.peers.push({ })">Add Peer</button>
                 </div>
             </div>
             <div class="form-group">
@@ -135,7 +135,7 @@
                         <li v-for="acl in activeServer.acls" class="row">
                             <div class="col-xs-4 no-wrap">
                                 <span class="glyphicon glyphicon-option-vertical cursor-pointer"
-                                    title="drag to resort\ndouble click to remove"
+                                    title="drag to resort&#13;double click to remove"
                                     v-on:mousedown="enableDragable(activeServer.acls, $index, $event)"
                                     v-on:dblclick="activeServer.acls.splice($index, 1)"></span>
                                 <select class="no-border"
@@ -152,7 +152,7 @@
                         </li>
                     </ul>
                     <button type="button" class="btn btn-sm"
-                        v-on:click="activeServer.acls.push({ })">Add</button>
+                        v-on:click="activeServer.acls.push({ })">Add ACL</button>
                 </div>
             </div>
         </form>
@@ -167,6 +167,7 @@
 <script src="//cdn.bootcss.com/vue-resource/0.1.17/vue-resource.js"></script>
 <script src="bootstrap-notify/bootstrap-notify.min.js"></script>
 <script src="simple-list-draggable/jquery-simple-list-draggable.js"></script>
+<script src="/socket.io/socket.io.js"></script>
 <script>
 
 Array.prototype.swap = function(i, j) {
@@ -272,16 +273,6 @@ new Vue({
             })
         },
 
-        updateStatus(count) {
-            if (!this.activeServer || !this.activeServer.id)
-                return this.serverStatus = ''
-            this.$resource('server/:id/status').get({ id:this.activeServer.id }, function(data) {
-                this.serverStatus = data ? 'running' : 'stopped'
-            }).error(function(data) {
-                this.serverStatus = 'error'
-            })
-        },
-
         getAclFormat(type) {
             return {
                 domain: 'peer domain...'
@@ -300,6 +291,7 @@ new Vue({
 
     api: null,
     ready() {
+        this.api = this.$resource('server/:id')
         this.$resource('server').get({ }, function(data) {
             this.serverList = data
             this.selectedId = Object.keys(this.serverList)[0] || ''
@@ -307,9 +299,16 @@ new Vue({
             $.notifyDanger('fetch data failed, refresh the page later')
         })
 
-        this.api = this.$resource('server/:id')
+        this.io = io()
+        this.io.on('status', (id, status) => {
+            if (this.activeServer && this.activeServer.id === id)
+                this.serverStatus = status ? 'running' : 'stopped'
+        })
 
-        setInterval(() => this.updateStatus(), 2000)
+        setInterval(() => {
+            if (this.activeServer && this.activeServer.id)
+                this.io.emit('status', this.activeServer.id)
+        }, 1000)
     }
 })
 </script>

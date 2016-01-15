@@ -1,4 +1,4 @@
-const koa = require('koa'),
+const koa = require('koa.io'),
     bodyParser = require('koa-body-parser'),
     staticServer = require('koa-static'),
     router = require('koa-router'),
@@ -51,5 +51,23 @@ app.use(auth())
     .use(api.allowedMethods())
     .use(staticServer('html'))
     .use(staticServer('node_modules'))
+
+var sockets = [ ]
+
+app.io.use(function *(next) {
+    sockets.push(this)
+    yield *next
+    sockets.splice(sockets.indexOf(this), 1)
+})
+
+app.io.route('status', function *(next, id) {
+    var status = yield *daemon.status(id)
+    this.emit('status', id, status)
+})
+
+daemon.evt.on('started stopped', function(id) {
+    var status = yield *daemon.status(id)
+    sockets.forEach(s => s.emit('status', id, status))
+})
 
 app.listen(8099)

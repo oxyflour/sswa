@@ -1,7 +1,8 @@
 const _ = require('underscore'),
     fs = require('fs'),
     path = require('path'),
-    cp = require("child_process")
+    cp = require('child_process'),
+    events = require('events')
 
 function promisify(fn) {
     return function() {
@@ -21,7 +22,9 @@ const readFile = promisify(fs.readFile),
     shellExec = promisify(cp.exec)
 
     currentDir = process.cwd(),
-    configTemplate = currentDir + '/var/squid.conf'
+    configTemplate = currentDir + '/var/squid.conf',
+
+    evt = new events.EventEmitter()
 
 function getConfig(id, data) {
     return {
@@ -46,6 +49,8 @@ module.exports = {
         var running = yield this.status(id, data)
         yield shellExec('squid -f ' + conf.configFile + (running ? ' -k reconfigure' : ''))
         console.log('squid #' + id + (running ? ' reconfiguring...' : ' starting...'))
+
+        evt.emit('started', id)
     },
     *stop(id, data) {
         const conf = getConfig(id, data)
@@ -55,9 +60,11 @@ module.exports = {
 
         yield shellExec('squid -f ' + conf.configFile + ' -k kill')
         console.log('squid #' + id + ' shutting down...')
+
+        evt.emit('stopped', id)
     },
     *status(id, data) {
-        const conf = getConfig(id, data)
+        const conf = getConfig(id, data = { })
 
         try {
             var pid = yield readFile(conf.pidFile, 'ascii')
@@ -68,4 +75,6 @@ module.exports = {
             return false
         }
     },
+
+    evt
 }
