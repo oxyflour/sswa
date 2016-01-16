@@ -18,7 +18,7 @@
     "koa-static": "^1.5.2",
     "koa-validate": "^0.2.11",
     "koa.io": "0.0.3",
-    "simple-list-draggable": "0.0.4",
+    "simple-list-draggable": "0.0.5",
     "underscore": "^1.8.3"
   }
 }
