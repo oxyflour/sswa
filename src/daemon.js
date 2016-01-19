@@ -20,7 +20,8 @@ function promisify(fn) {
 const readFile = promisify(fs.readFile),
     writeFile = promisify(fs.writeFile),
     fileExists = promisify(fs.exists),
-    shellExec = promisify(cp.exec)
+    shellExec = promisify(cp.exec),
+    mkdirpAsync = promisify(mkdirp),
 
     currentDir = process.cwd(),
     configTemplate = currentDir + '/var/squid.conf',
@@ -45,7 +46,7 @@ module.exports = {
     *start(id, data) {
         const conf = getConfig(id, data)
 
-        mkdirp.sync(conf.dir)
+        yield mkdirpAsync(conf.dir, { })
 
         var tpl = yield readFile(configTemplate, 'ascii')
         yield writeFile(conf.configFile, _.template(tpl)(conf))
