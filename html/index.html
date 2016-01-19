@@ -141,7 +141,12 @@
                                 <select class="no-border"
                                     v-model="acl.type">
                                     <option>custom</option>
-                                    <option>domain</option>
+                                    <option>domains</option>
+                                </select>
+                                <select v-if="acl.type === 'domain'" class="no-border"
+                                    v-model="acl.peer">
+                                    <option v-for="peer in activeServer.peers"
+                                        v-bind:value="peer.name">to {{ peer.name }}</option>
                                 </select>
                             </div>
                             <div class="col-xs-8">
