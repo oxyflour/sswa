@@ -2,7 +2,8 @@ const _ = require('underscore'),
     fs = require('fs'),
     path = require('path'),
     cp = require('child_process'),
-    events = require('events')
+    events = require('events'),
+    mkdirp = require('mkdirp')
 
 function promisify(fn) {
     return function() {
@@ -32,16 +33,19 @@ function getConfig(id, data) {
         port: data.port,
         peers: data.peers,
         acls: data.acls,
-        pidFile:        currentDir + '/var/squid.' + id + '.pid',
-        configFile:     currentDir + '/var/squid.' + id + '.conf',
-        accessLogFile:  currentDir + '/var/squid.' + id + '.access.log',
-        cacheLogFile:   currentDir + '/var/squid.' + id + '.cache.log',
+        dir: currentDir + '/var/' + id,
+        pidFile:        currentDir + '/var/' + id + '/pid',
+        configFile:     currentDir + '/var/' + id + '/squid.conf',
+        accessLogFile:  currentDir + '/var/' + id + '/access.log',
+        cacheLogFile:   currentDir + '/var/' + id + '/cache.log',
     }
 }
 
 module.exports = {
     *start(id, data) {
         const conf = getConfig(id, data)
+
+        mkdirp.sync(conf.dir)
 
         var tpl = yield readFile(configTemplate, 'ascii')
         yield writeFile(conf.configFile, _.template(tpl)(conf))
