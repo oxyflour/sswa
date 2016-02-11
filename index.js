@@ -65,6 +65,15 @@ app.io.route('status', function *(next, id) {
     this.emit('status', id, status)
 })
 
+var execs = db.list(),
+    co = require('co')
+
+Object.keys(execs).forEach(function(id) {
+    var data = db.get(id)
+    if (data.started)
+        co(daemon.start(id, data))
+})
+
 daemon.evt.on('started stopped', function(id) {
     var status = yield *daemon.status(id)
     sockets.forEach(s => s.emit('status', id, status))
