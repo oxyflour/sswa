@@ -52,7 +52,7 @@ module.exports = {
         yield writeFile(conf.configFile, _.template(tpl)(conf))
 
         var running = yield this.status(id, data)
-        yield shellExec('squid -f ' + conf.configFile + (running ? ' -k reconfigure' : ''))
+        yield shellExec('squid3 -f ' + conf.configFile + (running ? ' -k reconfigure' : ''))
         console.log('squid #' + id + (running ? ' reconfiguring...' : ' starting...'))
 
         evt.emit('started', id)
@@ -63,7 +63,7 @@ module.exports = {
         var running = yield this.status(id, data)
         if (!running) return console.log('squid #' + id + ' already stopped')
 
-        yield shellExec('squid -f ' + conf.configFile + ' -k kill')
+        yield shellExec('squid3 -f ' + conf.configFile + ' -k kill')
         console.log('squid #' + id + ' shutting down...')
 
         evt.emit('stopped', id)
