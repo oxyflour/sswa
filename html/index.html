@@ -145,6 +145,7 @@
                                 </select>
                                 <select v-if="acl.type === 'domain'" class="no-border"
                                     v-model="acl.peer">
+                                    <option value="!deny">deny</option>
                                     <option v-for="peer in activeServer.peers"
                                         v-bind:value="peer.name">to {{ peer.name }}</option>
                                 </select>
