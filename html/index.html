@@ -151,8 +151,8 @@
                                 </select>
                             </div>
                             <div class="col-xs-8">
-                                <tags-input
-                                    v-bind:placeholder="getAclFormat(acl.type)"
+                                <tags-input v-if="acl.type === 'domain'"
+                                    placeholder="domains"
                                     v-bind:model.sync="acl.rule" />
                             </div>
                         </li>
@@ -277,12 +277,6 @@ new Vue({
             }).error(function(data) {
                 $.notifyDanger('delete server failed')
             })
-        },
-
-        getAclFormat(type) {
-            return {
-                domain: 'peer domain...'
-            }[type] || 'acl'
         },
 
         enableDragable(list, index, evt) {

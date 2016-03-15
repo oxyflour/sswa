@@ -1,6 +1,6 @@
 const fs = require('fs'),
     basicAuth = require('basic-auth'),
-    authFile = 'var/user.json'
+    authFile = __dirname + '/../var/user.json'
 
 var user
 try {

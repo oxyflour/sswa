@@ -1,5 +1,5 @@
 const fs = require('fs'),
-    dbFile = 'var/config.json'
+    dbFile = __dirname + '/../var/config.json'
 
 module.exports = {
     data: fs.existsSync(dbFile) ? JSON.parse(fs.readFileSync(dbFile)) : { },

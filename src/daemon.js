@@ -23,22 +23,23 @@ const readFile = promisify(fs.readFile),
     shellExec = promisify(cp.exec),
     mkdirpAsync = promisify(mkdirp),
 
-    currentDir = process.cwd(),
-    configTemplate = currentDir + '/var/squid.conf',
+    varFolder = __dirname + '/../var',
+    configTemplate = varFolder + '/squid.conf',
 
     evt = new events.EventEmitter()
 
 function getConfig(id, data) {
+    var dir = varFolder + '/' + id
     return {
         id,
         port: data.port,
         peers: data.peers,
         acls: data.acls,
-        dir: currentDir + '/var/' + id,
-        pidFile:        currentDir + '/var/' + id + '/pid',
-        configFile:     currentDir + '/var/' + id + '/squid.conf',
-        accessLogFile:  currentDir + '/var/' + id + '/access.log',
-        cacheLogFile:   currentDir + '/var/' + id + '/cache.log',
+        dir:            dir,
+        pidFile:        dir + '/pid',
+        configFile:     dir + '/squid.conf',
+        accessLogFile:  dir + '/access.log',
+        cacheLogFile:   dir + '/cache.log',
     }
 }
 
