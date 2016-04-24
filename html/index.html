@@ -142,18 +142,23 @@
                                     v-model="acl.type">
                                     <option>custom</option>
                                     <option>domain</option>
+                                    <option>urlpath</option>
                                 </select>
-                                <select v-if="acl.type === 'domain'" class="no-border"
-                                    v-model="acl.peer">
+                                <select v-if="acl.type === 'domain' || acl.type === 'urlpath'"
+                                    class="no-border" v-model="acl.peer">
                                     <option value="!deny">deny</option>
                                     <option v-for="peer in activeServer.peers"
                                         v-bind:value="peer.name">to {{ peer.name }}</option>
                                 </select>
                             </div>
-                            <div class="col-xs-8">
-                                <tags-input v-if="acl.type === 'domain'"
+                            <div class="col-xs-8" v-if="acl.type === 'domain'">
+                                <tags-input
                                     placeholder="domains"
                                     v-bind:model.sync="acl.rule" />
+                            </div>
+                            <div class="col-xs-8" v-else>
+                                <input type="text" class="form-control"
+                                    v-model="acl.rule" />
                             </div>
                         </li>
                     </ul>
