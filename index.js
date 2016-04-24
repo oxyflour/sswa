@@ -49,8 +49,8 @@ app.use(auth())
     .use(validator())
     .use(api.routes())
     .use(api.allowedMethods())
-    .use(staticServer('html'))
-    .use(staticServer('node_modules'))
+    .use(staticServer(__dirname + '/html'))
+    .use(staticServer(__dirname + '/node_modules'))
 
 var sockets = [ ]
 
